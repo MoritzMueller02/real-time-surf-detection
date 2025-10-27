@@ -1,0 +1,21 @@
+{
+  "categories": [
+    {
+      "id": 0,
+      "name": "Non Surfer"
+    },
+    {
+      "id": 1,
+      "name": "Surfer"
+    },
+    {
+      "id": 2,
+      "name": "wave"
+    }
+  ],
+  "info": {
+    "year": 2025,
+    "version": "1.0",
+    "contributor": "Label Studio"
+  }
+}

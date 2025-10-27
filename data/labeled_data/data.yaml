@@ -1,0 +1,6 @@
+train: ./images/train
+val: ./images/val
+names:
+  0: Non Surfer
+  1: Surfer
+  2: wave

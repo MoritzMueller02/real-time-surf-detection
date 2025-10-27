@@ -16,7 +16,7 @@ cap = cv2.VideoCapture(url)
 cv2.namedWindow("Carcavelos Tracker", cv2.WINDOW_NORMAL)
 cv2.resizeWindow("Carcavelos Tracker", 960, 540)
 
-target_label = "Surfer"
+target_label = "wave"
 
 while True:
     ret, frame = cap.read()
@@ -27,7 +27,7 @@ while True:
         cap = cv2.VideoCapture(url)
         continue
 
-    results = model(frame, conf=0.1, verbose=False)
+    results = model(frame, conf=0.15, verbose=False)
     
     current_surfers = 0
 
