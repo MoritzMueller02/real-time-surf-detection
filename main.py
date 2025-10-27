@@ -4,7 +4,7 @@ from ultralytics import YOLO
 from dotenv import load_dotenv
 import os
 
-model = YOLO("best.pt")
+model = YOLO("models/yolo8n_opt.pt")
 
 print("Model classes:", model.names)
 
