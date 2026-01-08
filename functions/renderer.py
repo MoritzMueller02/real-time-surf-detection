@@ -34,7 +34,7 @@ class Renderer():
     def draw_counter(self, frame, counts):
         cv2.putText(
             frame,
-            f"Surfers detected: {counts['Surfers']}, Waves detected: {counts['Non-Surfers']}, Non-Surfers Detected {counts['Wave']}", 
+            f"Surfers detected: {counts['Surfers']}, Waves detected: {counts['Wave']}, Non-Surfers Detected {counts['Non-Surfers']}", 
             (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,

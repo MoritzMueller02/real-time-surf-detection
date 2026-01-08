@@ -6,14 +6,10 @@ A YOLOv8 model fine-tuned to detect surfers, non-surfers, and waves in real-time
 
 This project uses computer vision to analyze live beach camera streams and identify surfing activity. The model can detect three classes of objects: surfers actively riding waves, people in the water who aren't surfing, and the waves themselves.
 
-![Detection Example 1](tracked_objects/no_surfers_detected.png)
-*No activity detected in calm conditions*
 
-![Detection Example 2](tracked_objects/one_wave.png)
+![Detection Example](tracked_objects/single_wave_detected.png)
 *Wave detected with confidence score of 0.27*
 
-![Detection Example 3](tracked_objects/waves_detected.png)
-*Multiple waves detected in active surf conditions*
 
 ## Features
 
