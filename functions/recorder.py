@@ -10,7 +10,7 @@ class Recorder():
     Records a video if a wave over a certain confidence level has been tracked
     
     """
-    def __init__(self, target_class, width, height, conf_threshold=0.2 ,out_dir="videos", fps=25, record_seconds = 30):
+    def __init__(self, target_class, width, height, conf_threshold=0.2 ,out_dir="videos", fps=25, record_seconds = 100):
         self.target_class = target_class 
         self.width = width
         self.height = height
