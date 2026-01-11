@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surf Cam Detector – Live</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status.success { background: #e8f5e9; color: #388e3c; }
+        .status.error { background: #ffebee; color: #c62828; }
+        .status.processing { background: #fff3e0; color: #f57c00; }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #f57c00;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #live-video {
+            width: 100%;
+            max-height: 500px;
+            border-radius: 12px;
+            display: none;
+            margin-top: 20px;
+            background: black;
+        }
+
+        #recordings-list {
+            margin-top: 20px;
+        }
+
+        #recordings-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #recordings-list li {
+            margin-bottom: 12px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+            transition: border-color 0.2s;
+        }
+
+        #recordings-list li:hover {
+            border-color: #667eea;
+        }
+
+        #recordings-list a {
+            display: inline-block;
+            margin-top: 8px;
+            margin-right: 8px;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        #recordings-list a:hover {
+            background: #5568d3;
+        }
+
+        .delete-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #e53935;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #c62828;
+        }
+
+        .refresh-btn {
+            width: auto;
+            padding: 10px 20px;
+            background: #4caf50;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>🏄 Surf Cam Detector</h1>
+    <p class="subtitle">Live YOLO Detection via WebSocket</p>
+
+    <label>M3U8 Stream URL</label>
+    <input
+        id="m3u8-url"
+        type="text"
+        placeholder="https://video-auth1.iol.pt/beachcam/carcavelos/chunks.m3u8"
+    >
+
+    <label>Confidence (0–1)</label>
+    <input id="confidence" type="number" step="0.1" min="0" max="1" value="0.2">
+
+    <label>Skip Frames</label>
+    <input id="skip-frames" type="number" min="1" value="2">
+
+    <button id="start-btn" onclick="startStream()">🔴 Live Detection starten</button>
+    <button onclick="stopStream()" style="background:#e53935;">⏹️ Stop</button>
+
+    <div id="status" class="status"></div>
+
+    <img id="live-video">
+</div>
+
+<div class="container">
+    <h2>🎞️ Saved Wave Recordings</h2>
+    <button class="refresh-btn" onclick="loadRecordings()">🔄 Refresh List</button>
+    <div id="recordings-list">
+        <p>⏳ Loading recordings...</p>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://surf-crowd-tracker.politemoss-6a4e73e6.spaincentral.azurecontainerapps.io";
+    const WS_URL  = "wss://surf-crowd-tracker.politemoss-6a4e73e6.spaincentral.azurecontainerapps.io/ws/detect/m3u8";
+    let socket = null;
+
+    function showStatus(text, type) {
+        const el = document.getElementById("status");
+        el.className = `status ${type}`;
+        el.style.display = "block";
+        el.innerHTML = type === "processing"
+            ? `<span class="spinner"></span>${text}`
+            : text;
+    }
+
+    function startStream() {
+        const url = document.getElementById("m3u8-url").value.trim();
+        const confidence = parseFloat(document.getElementById("confidence").value);
+        const skipFrames = parseInt(document.getElementById("skip-frames").value);
+
+        if (!url || !url.includes(".m3u8")) {
+            showStatus("❌ Bitte gültige M3U8 URL eingeben", "error");
+            return;
+        }
+
+        document.getElementById("start-btn").disabled = true;
+        showStatus("🔴 Verbinde zum Live Stream…", "processing");
+
+        const img = document.getElementById("live-video");
+        img.style.display = "block";
+
+        socket = new WebSocket(WS_URL);
+
+        socket.onopen = () => {
+            socket.send(JSON.stringify({
+                url: url,
+                confidence_threshold: confidence,
+                skip_frames: skipFrames
+            }));
+        };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.error) {
+                showStatus(`❌ ${data.error}`, "error");
+                stopStream();
+                return;
+            }
+
+            if (data.frame) {
+                img.src = "data:image/jpeg;base64," + data.frame;
+                showStatus("🟢 Live Detection läuft", "success");
+            }
+        };
+
+        socket.onerror = () => {
+            cleanupUI("❌ WebSocket Fehler", "error");
+        };
+
+        socket.onclose = () => {
+            cleanupUI("⏹️ Stream gestoppt", "success");
+            // Refresh recordings list when stream stops
+            loadRecordings();
+        };
+    }
+
+    function stopStream() {
+        if (socket) {
+            socket.close();
+            socket = null;
+        }
+        cleanupUI("⏹️ Stream gestoppt", "success");
+        // Refresh recordings list when manually stopped
+        loadRecordings();
+    }
+
+    function cleanupUI(message, type) {
+        document.getElementById("live-video").style.display = "none";
+        document.getElementById("start-btn").disabled = false;
+        showStatus(message, type);
+    }
+
+    async function loadRecordings() {
+        const container = document.getElementById("recordings-list");
+        container.innerHTML = '<p style="color:#666;">⏳ Lade Aufnahmen…</p>';
+
+        try {
+            // CHANGED: Using /api/recordings/list instead of /recordings/list
+            const res = await fetch(`${API_URL}/api/recordings/list`);
+            
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            
+            const files = await res.json();
+
+            if (!files || files.length === 0) {
+                container.innerHTML = '<p style="color:#666;">Keine Aufnahmen vorhanden.</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <ul>
+                    ${files.map(f => `
+                        <li>
+                            <strong>${f.filename}</strong><br>
+                            📅 ${new Date(f.created).toLocaleString('de-DE')}<br>
+                            💾 ${f.size_mb} MB<br>
+                            <a href="${API_URL}${f.url}" download>
+                                ⬇️ Download
+                            </a>
+                            <button class="delete-btn" onclick="deleteRecording('${f.filename}')">
+                                🗑️ Delete
+                            </button>
+                        </li>
+                    `).join("")}
+                </ul>
+            `;
+        } catch (err) {
+            console.error('Error loading recordings:', err);
+            container.innerHTML = '<p style="color:#c62828;">❌ Fehler beim Laden der Aufnahmen. Check console for details.</p>';
+        }
+    }
+
+    // Load recordings when page loads
+    window.addEventListener('DOMContentLoaded', loadRecordings);
+
+    async function deleteRecording(filename) {
+        if (!confirm(`Möchten Sie "${filename}" wirklich löschen?`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/recordings/delete/${encodeURIComponent(filename)}`, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const result = await res.json();
+            
+            if (result.success) {
+                loadRecordings();
+            } else {
+                alert(`Fehler: ${result.message || 'Konnte nicht gelöscht werden'}`);
+            }
+        } catch (err) {
+            console.error('Error deleting recording:', err);
+            alert('Fehler beim Löschen der Aufnahme');
+        }
+    }
+</script>
+
+</body>
+</html>
